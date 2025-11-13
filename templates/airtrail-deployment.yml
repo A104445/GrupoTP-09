@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airtrail
+  namespace: default
+  labels:
+    app: airtrail
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: airtrail
+  template:
+    metadata:
+      labels:
+        app: airtrail
+    spec:
+      containers:
+        - name: airtrail
+          image: johly/airtrail:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          env:
+            - name: DB_USERNAME
+              value: airtrail
+            - name: DB_PASSWORD
+              value: password
+            - name: DB_DATABASE_NAME
+              value: airtrail
+            - name: DB_URL
+              value: "postgres://airtrail:password@airtrail-postgres:5432/airtrail"
+            - name: PRISMA_DISABLE_ENV_LOAD
+              value: "1"
+      restartPolicy: Always

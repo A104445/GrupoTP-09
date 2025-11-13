@@ -1,3 +1,58 @@
 ---
-# Playbook to deploy Airtrail and its components
-# TO DO
+- name: Undeploy AirTrail and Postgres from GKE
+  hosts: localhost
+  gather_facts: no
+  vars:
+    delete_data: false
+  tasks:
+
+    # --------------------------
+    # Delete AirTrail resources
+    # --------------------------
+    - name: Undeploy the AirTrail Service
+      kubernetes.core.k8s:
+        state: absent
+        definition: "{{ lookup('template', 'templates/airtrail-service.yml') }}"
+        wait: yes
+        wait_timeout: 300
+
+    - name: Undeploy the AirTrail HPA
+      kubernetes.core.k8s:
+        state: absent
+        definition: "{{ lookup('template', 'templates/airtrail-hpa.yml') }}"
+        wait: yes
+        wait_timeout: 300
+      tags: ['hpa']
+
+    - name: Undeploy the AirTrail Deployment
+      kubernetes.core.k8s:
+        state: absent
+        definition: "{{ lookup('template', 'templates/airtrail-deployment.yml') }}"
+        wait: yes
+        wait_timeout: 300
+
+    # --------------------------
+    # Delete Postgres resources
+    # --------------------------
+    - name: Undeploy the Postgres Service
+      kubernetes.core.k8s:
+        state: absent
+        definition: "{{ lookup('template', 'templates/postgres-service.yml') }}"
+        wait: yes
+        wait_timeout: 300
+
+    - name: Undeploy the Postgres Deployment
+      kubernetes.core.k8s:
+        state: absent
+        definition: "{{ lookup('template', 'templates/postgres-deployment.yml') }}"
+        wait: yes
+        wait_timeout: 300
+
+    - name: Undeploy the Postgres Persistent Volume Claim
+      kubernetes.core.k8s:
+        state: absent
+        definition: "{{ lookup('template', 'templates/postgres-pvc-claim.yml') }}"
+        wait: yes
+        wait_timeout: 300
+      tags: ['pvc']
+      when: delete_data | bool
