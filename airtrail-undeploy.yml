@@ -16,14 +16,6 @@
         wait: yes
         wait_timeout: 300
 
-    - name: Undeploy the AirTrail HPA
-      kubernetes.core.k8s:
-        state: absent
-        definition: "{{ lookup('template', 'templates/airtrail-hpa.yml') }}"
-        wait: yes
-        wait_timeout: 300
-      tags: ['hpa']
-
     - name: Undeploy the AirTrail Deployment
       kubernetes.core.k8s:
         state: absent
