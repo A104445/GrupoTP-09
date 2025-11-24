@@ -12,8 +12,9 @@ ansible-playbook airtrail-deploy
 Entrar na porta que foi aberta para a rede
 
 ## Para testar checkpoint2:
-1. Ter o codebase disponibilizado pelos docentes
-2. ./checkpoint.sh -i ~/ProjetoASCN/codebase/ -o . -c 2 # Replace ProjetoASCN..info: codebase dos docentes está na raiz da máquina e o script também
+1. Fazer ansible-playbook gke-cluster-create.yml no nosso proprio projeto
+2. Ter o codebase disponibilizado pelos docentes
+3. ./checkpoint.sh -i ~/ProjetoASCN/codebase/ -o . -c 2 # Replace ProjetoASCN..info: codebase dos docentes está na raiz da máquina e o script também
 ## A fazer:
 1. Separar hard coded passwords,url,user etc para vaults
 2. Separar também para usar config maps
