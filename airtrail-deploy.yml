@@ -71,7 +71,7 @@
       state: present
       definition: "{{ lookup('template', 'templates/airtrail-deployment.yml') }}"
       wait: yes
-      wait_timeout: 120
+      wait_timeout: 600
       wait_condition:
         status: "True"
         type: Available
