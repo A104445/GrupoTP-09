@@ -8,7 +8,7 @@
       state: present
       definition: "{{ lookup('template', 'templates/postgres-pvc-claim.yml') }}"
       wait: yes
-      wait_timeout: 300
+      wait_timeout: 600
 
   - name: Deploy the Postgres Service
     kubernetes.core.k8s:
@@ -25,7 +25,7 @@
       state: present
       definition: "{{ lookup('template', 'templates/postgres-deployment.yml') }}"
       wait: yes
-      wait_timeout: 300
+      wait_timeout: 600
       wait_condition:
         status: "True"
         type: Available
@@ -56,7 +56,7 @@
       name: "{{ pod_postgres.resources[0].metadata.name }}"
       wait: yes
       wait_sleep: 5
-      wait_timeout: 300
+      wait_timeout: 600
     register: pod_ready
 
   - name: Confirm the pod is Running
@@ -71,7 +71,7 @@
       state: present
       definition: "{{ lookup('template', 'templates/airtrail-deployment.yml') }}"
       wait: yes
-      wait_timeout: 60
+      wait_timeout: 120
       wait_condition:
         status: "True"
         type: Available
@@ -85,7 +85,7 @@
         - "component=backend"
     register: service_info
     until: service_info.resources[0].status.loadBalancer.ingress is defined
-    retries: 60
+    retries: 120
     delay: 5
 
   - name: Assign the external IP to app_ip

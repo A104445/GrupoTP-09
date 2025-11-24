@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: airtrail
-          image: johly/airtrail:latest
+          image: johly/airtrail:v3.2.2
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
