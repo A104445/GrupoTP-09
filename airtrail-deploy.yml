@@ -2,6 +2,9 @@
   hosts: localhost
   connection: local
   gather_facts: no
+  vars_files:
+    - inventory/secrets.yml
+    
   tasks:
   - name: Deploy AirTrail ConfigMap
     kubernetes.core.k8s:
