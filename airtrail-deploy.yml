@@ -3,6 +3,16 @@
   connection: local
   gather_facts: no
   tasks:
+  - name: Deploy AirTrail ConfigMap
+    kubernetes.core.k8s:
+      state: present
+      definition: "{{ lookup('template', 'templates/airtrail-config.yml') }}"
+
+  - name: Deploy AirTrail Secrets
+    kubernetes.core.k8s:
+      state: present
+      definition: "{{ lookup('template', 'templates/airtrail-secrets.yml') }}"
+  
   - name: Deploy the Postgres Persistent Volume Claim
     kubernetes.core.k8s:
       state: present

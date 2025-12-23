@@ -28,11 +28,12 @@ all:
     
     POSTGRES_DB: airtrail
     POSTGRES_USER: airtrail
-    POSTGRES_PASSWORD: password
+    POSTGRES_PASSWORD: "{{ vault_postgres_password }}"
 
     DB_DATABASE_NAME: airtrail
     DB_USERNAME: airtrail
-    DB_PASSWORD: password
-    DB_URL: postgres://airtrail:password@airtrail-postgres:5432/airtrail
+    DB_PASSWORD: "{{ vault_db_password }}"
+    DB_URL: postgres://airtrail:{{ vault_db_password }}@airtrail-postgres:5432/airtrail
     # Additional variables
     # ...
+    app_admin_api_key: "{{ vault_app_admin_api_key }}"

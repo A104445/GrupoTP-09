@@ -27,11 +27,11 @@ spec:
           failureThreshold: 20
           env:
             - name: POSTGRES_DB
-              value: airtrail
+              valueFrom: { configMapKeyRef: { name: airtrail-config, key: POSTGRES_DB } }
             - name: POSTGRES_USER
-              value: airtrail
+              valueFrom: { configMapKeyRef: { name: airtrail-config, key: POSTGRES_USER } }
             - name: POSTGRES_PASSWORD
-              value: password
+              valueFrom: { secretKeyRef: { name: airtrail-secrets, key: POSTGRES_PASSWORD } }
           volumeMounts:
             - name: mysql-persistent-storage
               mountPath: /var/lib/postgresql
