@@ -2,7 +2,5 @@
 - name: Undeploy AirTrail and Postgres from GKE
   hosts: localhost
   gather_facts: no
-  vars:
-    delete_data: false
   roles:
     - airtrail_undeploy

@@ -1,4 +1,3 @@
 ---
 # Role-specific variables for airtrail_undeploy
 wait_timeout: 300
-# delete_data default is set in airtrail-undeploy.yml playbook
