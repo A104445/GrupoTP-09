@@ -105,6 +105,11 @@
     set_fact:
       app_ip: "{{ service_info.resources[0].status.loadBalancer.ingress[0].ip }}"
 
+  - name: Deploy Horizontal Pod Autoscaler
+    kubernetes.core.k8s:
+      state: present
+      definition: "{{ lookup('template', 'templates/airtrail-hpa.yml') }}"
+
   - name: Display AirTrail access IP
     debug:
       var: app_ip
