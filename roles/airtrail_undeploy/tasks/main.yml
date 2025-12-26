@@ -59,4 +59,3 @@
     wait: yes
     wait_timeout: "{{ wait_timeout }}"
   tags: ['pvc']
-  when: delete_data | bool
