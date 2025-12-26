@@ -1,0 +1,113 @@
+---
+# Deploy AirTrail application on Kubernetes
+
+- name: Deploy the Postgres Secret
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'templates/postgres-secret.yml') }}"
+
+- name: Deploy the Postgres Persistent Volume Claim
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'templates/postgres-pvc-claim.yml') }}"
+    wait: yes
+    wait_timeout: "{{ wait_timeout }}"
+
+- name: Deploy the Postgres Service
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'templates/postgres-service.yml') }}"
+
+- name: Deploy the AirTrail ConfigMap
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'templates/airtrail-configmap.yml') }}"
+
+- name: Deploy the AirTrail Secret
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'templates/airtrail-secret.yml') }}"
+
+- name: Deploy the AirTrail Service
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'templates/airtrail-service.yml') }}"
+
+- name: Deploy the Postgres Deployment
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'templates/postgres-deployment.yml') }}"
+    wait: yes
+    wait_timeout: "{{ wait_timeout }}"
+    wait_condition:
+      status: "True"
+      type: Available
+
+- name: Search for pods with label app=airtrail-db
+  kubernetes.core.k8s_info:
+    kind: Pod
+    namespace: "{{ namespace }}"
+    label_selectors:
+      - app=airtrail-db
+    wait: yes
+    wait_sleep: 2
+    wait_timeout: 15
+  register: pod_postgres
+
+- name: Ensure at least one pod exists
+  assert:
+    that:
+      - pod_postgres.resources | length > 0
+    fail_msg: "No pods found with label app=airtrail-db"
+
+- name: Wait until the pod is Running
+  kubernetes.core.k8s_info:
+    kind: Pod
+    namespace: "{{ namespace }}"
+    name: "{{ pod_postgres.resources[0].metadata.name }}"
+    wait: yes
+    wait_sleep: 5
+    wait_timeout: "{{ wait_timeout }}"
+  register: pod_ready
+
+- name: Confirm the pod is Running
+  assert:
+    that:
+      - pod_ready.resources[0].status.phase == "Running"
+    fail_msg: "The pod is not Running yet"
+
+- name: Deploy the AirTrail Deployment
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'templates/airtrail-deployment.yml') }}"
+    wait: yes
+    wait_timeout: "{{ wait_timeout }}"
+    wait_condition:
+      status: "True"
+      type: Available
+
+- name: Wait for external IP address
+  kubernetes.core.k8s_info:
+    kind: Service
+    namespace: "{{ namespace }}"
+    label_selectors:
+      - "app=airtrail"
+      - "component=backend"
+  register: service_info
+  until: service_info.resources[0].status.loadBalancer.ingress is defined
+  retries: 120
+  delay: 5
+
+- name: Assign the external IP to app_ip
+  set_fact:
+    app_ip: "{{ service_info.resources[0].status.loadBalancer.ingress[0].ip }}"
+
+- name: Display AirTrail access IP
+  debug:
+    var: app_ip
+
+- name: Update app_ip in inventory file
+  replace:
+    path: inventory/gcp.yml
+    regexp: "app_ip:.+"
+    replace: "app_ip: '{{ app_ip }}'"

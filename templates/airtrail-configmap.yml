@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: airtrail-config
+  namespace: default
+  labels:
+    app: airtrail
+data:
+  DB_DATABASE_NAME: "{{ DB_DATABASE_NAME }}"
+  DB_USERNAME: "{{ DB_USERNAME }}"
+  PRISMA_DISABLE_ENV_LOAD: "1"

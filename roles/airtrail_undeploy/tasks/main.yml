@@ -1,0 +1,62 @@
+---
+# Undeploy AirTrail and Postgres from GKE
+
+# Delete AirTrail resources
+- name: Undeploy the AirTrail Service
+  kubernetes.core.k8s:
+    state: absent
+    definition: "{{ lookup('template', 'templates/airtrail-service.yml') }}"
+    wait: yes
+    wait_timeout: "{{ wait_timeout }}"
+
+- name: Undeploy the AirTrail Deployment
+  kubernetes.core.k8s:
+    state: absent
+    definition: "{{ lookup('template', 'templates/airtrail-deployment.yml') }}"
+    wait: yes
+    wait_timeout: "{{ wait_timeout }}"
+
+- name: Undeploy the AirTrail ConfigMap
+  kubernetes.core.k8s:
+    state: absent
+    definition: "{{ lookup('template', 'templates/airtrail-configmap.yml') }}"
+    wait: yes
+    wait_timeout: "{{ wait_timeout }}"
+
+- name: Undeploy the AirTrail Secret
+  kubernetes.core.k8s:
+    state: absent
+    definition: "{{ lookup('template', 'templates/airtrail-secret.yml') }}"
+    wait: yes
+    wait_timeout: "{{ wait_timeout }}"
+
+# Delete Postgres resources
+- name: Undeploy the Postgres Service
+  kubernetes.core.k8s:
+    state: absent
+    definition: "{{ lookup('template', 'templates/postgres-service.yml') }}"
+    wait: yes
+    wait_timeout: "{{ wait_timeout }}"
+
+- name: Undeploy the Postgres Deployment
+  kubernetes.core.k8s:
+    state: absent
+    definition: "{{ lookup('template', 'templates/postgres-deployment.yml') }}"
+    wait: yes
+    wait_timeout: "{{ wait_timeout }}"
+
+- name: Undeploy the Postgres Secret
+  kubernetes.core.k8s:
+    state: absent
+    definition: "{{ lookup('template', 'templates/postgres-secret.yml') }}"
+    wait: yes
+    wait_timeout: "{{ wait_timeout }}"
+
+- name: Undeploy the Postgres Persistent Volume Claim
+  kubernetes.core.k8s:
+    state: absent
+    definition: "{{ lookup('template', 'templates/postgres-pvc-claim.yml') }}"
+    wait: yes
+    wait_timeout: "{{ wait_timeout }}"
+  tags: ['pvc']
+  when: delete_data | bool

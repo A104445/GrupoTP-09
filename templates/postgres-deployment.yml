@@ -21,17 +21,13 @@ spec:
           ports:
             - containerPort: 5432
           startupProbe:
-          exec:
-            command: ["pg_isready", "-U", "airtrail"]
-          periodSeconds: 5 
-          failureThreshold: 20
-          env:
-            - name: POSTGRES_DB
-              value: airtrail
-            - name: POSTGRES_USER
-              value: airtrail
-            - name: POSTGRES_PASSWORD
-              value: password
+            exec:
+              command: ["pg_isready", "-U", "{{ POSTGRES_USER }}"]
+            periodSeconds: 5
+            failureThreshold: 20
+          envFrom:
+            - secretRef:
+                name: postgres-secret
           volumeMounts:
             - name: mysql-persistent-storage
               mountPath: /var/lib/postgresql

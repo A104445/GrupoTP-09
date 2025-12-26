@@ -1,0 +1,4 @@
+---
+# Role-specific variables for airtrail_deploy
+wait_timeout: 600
+namespace: default

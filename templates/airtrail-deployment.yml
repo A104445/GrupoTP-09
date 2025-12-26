@@ -22,15 +22,9 @@ spec:
           ports:
             - containerPort: 3000
               protocol: TCP
-          env:
-            - name: DB_USERNAME
-              value: airtrail
-            - name: DB_PASSWORD
-              value: password
-            - name: DB_DATABASE_NAME
-              value: airtrail
-            - name: DB_URL
-              value: "postgres://airtrail:password@airtrail-postgres:5432/airtrail"
-            - name: PRISMA_DISABLE_ENV_LOAD
-              value: "1"
+          envFrom:
+            - configMapRef:
+                name: airtrail-config
+            - secretRef:
+                name: airtrail-secret
       restartPolicy: Always

@@ -25,14 +25,4 @@ all:
     app_ip: '34.187.180.204'
     app_port: 3000
 
-    
-    POSTGRES_DB: airtrail
-    POSTGRES_USER: airtrail
-    POSTGRES_PASSWORD: password
-
-    DB_DATABASE_NAME: airtrail
-    DB_USERNAME: airtrail
-    DB_PASSWORD: password
-    DB_URL: postgres://airtrail:password@airtrail-postgres:5432/airtrail
-    # Additional variables
-    # ...
+    # Database and sensitive variables are now in group_vars/all/vault.yml
