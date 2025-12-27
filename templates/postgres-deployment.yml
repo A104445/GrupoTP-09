@@ -29,9 +29,9 @@ spec:
             - secretRef:
                 name: postgres-secret
           volumeMounts:
-            - name: mysql-persistent-storage
-              mountPath: /var/lib/postgresql
+            - name: postgres-persistent-storage
+              mountPath: /var/lib/postgresql/data
       volumes:
-        - name: mysql-persistent-storage
+        - name: postgres-persistent-storage
           persistentVolumeClaim:
             claimName: airtrail-db-pvc-claim

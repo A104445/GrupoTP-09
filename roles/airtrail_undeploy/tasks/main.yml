@@ -58,4 +58,6 @@
     definition: "{{ lookup('template', 'templates/postgres-pvc-claim.yml') }}"
     wait: yes
     wait_timeout: "{{ wait_timeout }}"
+  when: delete_data | default(false) | bool
   tags: ['pvc']
+
