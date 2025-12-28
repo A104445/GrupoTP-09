@@ -1,7 +1,7 @@
 {
   "id": null,
-  "uid": "k8s-simple-observability",
-  "title": "Kubernetes Application Overview",
+  "uid": "airtrail-monitoring",
+  "title": "Airtrail Application Monitoring",
   "timezone": "browser",
   "schemaVersion": 38,
   "version": 1,
@@ -9,35 +9,30 @@
   "templating": {
     "list": [
       {
-        "name": "cluster",
-        "type": "query",
-        "datasource": "Prometheus",
-        "query": "label_values(kube_pod_info, cluster)",
-        "current": {},
-        "refresh": 1
-      },
-      {
         "name": "namespace",
         "type": "query",
         "datasource": "Prometheus",
-        "query": "label_values(kube_pod_info{cluster=\"$cluster\"}, namespace)",
-        "current": {},
+        "query": "label_values(container_cpu_usage_seconds_total, namespace)",
+        "current": {
+          "text": "default",
+          "value": "default"
+        },
         "refresh": 1
       },
       {
         "name": "pod",
         "type": "query",
         "datasource": "Prometheus",
-        "query": "label_values(kube_pod_info{cluster=\"$cluster\", namespace=\"$namespace\"}, pod)",
+        "query": "label_values(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"airtrail.*\"}, pod)",
         "multi": true,
         "includeAll": true,
         "refresh": 1
       },
       {
-        "name": "node",
+        "name": "instance",
         "type": "query",
         "datasource": "Prometheus",
-        "query": "label_values(kube_node_info{cluster=\"$cluster\"}, node)",
+        "query": "label_values(node_filesystem_avail_bytes, instance)",
         "current": {},
         "refresh": 1
       }
@@ -46,81 +41,241 @@
   "panels": [
     {
       "id": 1,
-      "type": "timeseries",
-      "title": "Pod CPU Usage (%)",
-      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "type": "stat",
+      "title": "Airtrail Pods Running",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
       "targets": [
         {
-          "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{cluster=\"$cluster\", namespace=\"$namespace\", pod=~\"$pod\", container!=\"POD\"}[5m])) * 100",
-          "legendFormat": "{{pod}}",
+          "expr": "count(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"airtrail.*\", container!=\"POD\", container!=\"\"})",
           "refId": "A"
         }
-      ]
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none"
+      }
     },
     {
       "id": 2,
-      "type": "timeseries",
-      "title": "Pod Memory Usage (bytes)",
-      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "type": "stat",
+      "title": "Airtrail CPU (cores)",
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
       "targets": [
         {
-          "expr": "sum by (pod) (container_memory_working_set_bytes{cluster=\"$cluster\", namespace=\"$namespace\", pod=~\"$pod\", container!=\"POD\"})",
-          "legendFormat": "{{pod}}",
+          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"airtrail.*\", container!=\"POD\", container!=\"\"}[5m]))",
           "refId": "A"
         }
-      ]
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 3
+        }
+      }
     },
     {
       "id": 3,
-      "type": "timeseries",
-      "title": "HTTP Requests / second",
-      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "type": "stat",
+      "title": "Airtrail Memory",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
       "targets": [
         {
-          "expr": "sum by (pod) (rate(http_requests_total{namespace=\"$namespace\", pod=~\"$pod\"}[1m]))",
-          "legendFormat": "{{pod}}",
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"airtrail.*\", container!=\"POD\", container!=\"\"})",
           "refId": "A"
         }
-      ]
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        }
+      }
     },
     {
       "id": 4,
-      "type": "timeseries",
-      "title": "HTTP Latency p95 (seconds)",
-      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "type": "stat",
+      "title": "Postgres Memory",
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum by (le, pod) (rate(http_request_duration_seconds_bucket{namespace=\"$namespace\", pod=~\"$pod\"}[5m])))",
-          "legendFormat": "{{pod}}",
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\".*postgres.*\", container!=\"POD\", container!=\"\"})",
           "refId": "A"
         }
-      ]
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        }
+      }
     },
     {
       "id": 5,
       "type": "timeseries",
-      "title": "Failed HTTP Requests (4xx + 5xx)",
-      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "title": "Airtrail CPU Usage (cores)",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 8
+      },
       "targets": [
         {
-          "expr": "sum by (pod) (rate(http_requests_total{namespace=\"$namespace\", pod=~\"$pod\", status=~\"4..|5..\"}[1m]))",
+          "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"airtrail.*\", container!=\"POD\", container!=\"\"}[5m]))",
           "legendFormat": "{{pod}}",
           "refId": "A"
         }
-      ]
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      }
     },
     {
       "id": 6,
       "type": "timeseries",
-      "title": "Node Disk Usage (%)",
-      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "title": "Airtrail Memory Usage",
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 8
+      },
       "targets": [
         {
-          "expr": "100 * (1 - node_filesystem_avail_bytes{cluster=\"$cluster\", node=\"$node\", fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{cluster=\"$cluster\", node=\"$node\", fstype!~\"tmpfs|overlay\"})",
-          "legendFormat": "{{node}}",
+          "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"airtrail.*\", container!=\"POD\", container!=\"\"})",
+          "legendFormat": "{{pod}}",
           "refId": "A"
         }
-      ]
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Postgres CPU Usage (cores)",
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\".*postgres.*\", container!=\"POD\", container!=\"\"}[5m]))",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Postgres Memory Usage",
+      "gridPos": {
+        "x": 12,
+        "y": 12,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\".*postgres.*\", container!=\"POD\", container!=\"\"})",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Container Network Receive (bytes/s)",
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (pod) (rate(container_network_receive_bytes_total{namespace=\"$namespace\", pod=~\"airtrail.*|.*postgres.*\"}[5m]))",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Container Network Transmit (bytes/s)",
+      "gridPos": {
+        "x": 12,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (pod) (rate(container_network_transmit_bytes_total{namespace=\"$namespace\", pod=~\"airtrail.*|.*postgres.*\"}[5m]))",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps"
+        }
+      }
     }
   ]
 }
