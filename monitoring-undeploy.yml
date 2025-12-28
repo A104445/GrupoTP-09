@@ -1,0 +1,43 @@
+---
+- name: Undeploy Monitoring Stack
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    monitoring_namespace: my-grafana
+
+  tasks:
+    - name: Delete Grafana
+      kubernetes.core.k8s:
+        state: absent
+        namespace: "{{ monitoring_namespace }}"
+        src: templates/k8s_monitoring/grafana.yaml
+      ignore_errors: true
+
+    - name: Delete Prometheus
+      kubernetes.core.k8s:
+        state: absent
+        namespace: "{{ monitoring_namespace }}"
+        src: templates/k8s_monitoring/prometheus.yaml
+      ignore_errors: true
+
+    - name: Delete Node Exporter
+      kubernetes.core.k8s:
+        state: absent
+        namespace: "{{ monitoring_namespace }}"
+        src: templates/k8s_monitoring/node-exporter.yaml
+      ignore_errors: true
+
+    - name: Delete monitoring namespace
+      kubernetes.core.k8s:
+        state: absent
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ monitoring_namespace }}"
+
+    - name: Display status
+      debug:
+        msg: "Monitoring stack has been removed"

@@ -1,0 +1,78 @@
+---
+- name: Deploy Monitoring Stack (Grafana + Prometheus + Node Exporter)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    monitoring_namespace: my-grafana
+
+  tasks:
+    - name: Create monitoring namespace
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ monitoring_namespace }}"
+
+    - name: Deploy Node Exporter
+      kubernetes.core.k8s:
+        state: present
+        namespace: "{{ monitoring_namespace }}"
+        src: templates/k8s_monitoring/node-exporter.yaml
+
+    - name: Deploy Prometheus
+      kubernetes.core.k8s:
+        state: present
+        namespace: "{{ monitoring_namespace }}"
+        src: templates/k8s_monitoring/prometheus.yaml
+
+    - name: Deploy Grafana
+      kubernetes.core.k8s:
+        state: present
+        namespace: "{{ monitoring_namespace }}"
+        src: templates/k8s_monitoring/grafana.yaml
+
+    - name: Wait for Prometheus to be ready
+      kubernetes.core.k8s_info:
+        kind: Deployment
+        name: prometheus
+        namespace: "{{ monitoring_namespace }}"
+      register: prometheus_deployment
+      until: prometheus_deployment.resources[0].status.readyReplicas | default(0) >= 1
+      retries: 30
+      delay: 10
+
+    - name: Wait for Grafana to be ready
+      kubernetes.core.k8s_info:
+        kind: Deployment
+        name: grafana
+        namespace: "{{ monitoring_namespace }}"
+      register: grafana_deployment
+      until: grafana_deployment.resources[0].status.readyReplicas | default(0) >= 1
+      retries: 30
+      delay: 10
+
+    - name: Get Grafana service info
+      kubernetes.core.k8s_info:
+        kind: Service
+        name: grafana
+        namespace: "{{ monitoring_namespace }}"
+      register: grafana_svc
+
+    - name: Get Prometheus service info
+      kubernetes.core.k8s_info:
+        kind: Service
+        name: prometheus
+        namespace: "{{ monitoring_namespace }}"
+      register: prometheus_svc
+
+    - name: Display monitoring URLs
+      debug:
+        msg:
+          - "=== Monitoring Stack Deployed ==="
+          - "Grafana URL: http://{{ grafana_svc.resources[0].status.loadBalancer.ingress[0].ip | default('pending') }}:3000"
+          - "Prometheus URL: http://{{ prometheus_svc.resources[0].status.loadBalancer.ingress[0].ip | default('pending') }}:9090"
+          - "Grafana login: admin / admin"
