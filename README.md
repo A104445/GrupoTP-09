@@ -73,11 +73,15 @@ Depois em DashBoard adicionar o json que está no projeto.
 ansible-playbook (qualquercoisa).yml
 
 ## Para correr os stress tests (teste é genérico)
-
+### Nao esquecer de mudar IP para usar o da app_ip do gcp
 ```bash
 k6 run tests/k6/teste.js
 ```
+### Teste pode ser feito na k6 na cloud é preciso criar conta Grafana!!
 
+Entrar na conta, na stack. deve algum do genero username.grafana.net
+
+Ir em performance > Default project > Create new test > Na maquina que tem o k6 fazer comando do authenticate > na maquinae em questão: k6 cloud run stress-test.js (atencao com cd para conseguir executar ou não..)
 ### Output results to JSON file
 k6 run --out json=results.json tests/k6/teste.js
 
