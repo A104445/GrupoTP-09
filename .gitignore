@@ -1,7 +1,7 @@
 # Ansible vault password file
 .vault_pass
 
-# GCP service account credentials (keep out of repo)
+# GCP service account credentials
 projetoascn2025-*.json
 
 # Python
@@ -14,3 +14,5 @@ __pycache__/
 *~
 .vscode/
 .idea/
+
+.gitignore

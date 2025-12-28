@@ -2,6 +2,8 @@
 
 e2-standard-2 e zona: us-west1-b
 
+## ENV
+Usar .vault_pass com ascn2526
 ## Dependências
 
 ansible [core 2.16.3]
