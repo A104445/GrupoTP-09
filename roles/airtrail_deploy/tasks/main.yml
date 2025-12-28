@@ -91,6 +91,11 @@
       status: "True"
       type: Available
 
+- name: Deploy the AirTrail HPA (Horizontal Pod Autoscaler)
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'templates/airtrail-hpa.yml') }}"
+
 - name: Wait for external IP address
   kubernetes.core.k8s_info:
     kind: Service

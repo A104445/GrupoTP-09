@@ -17,6 +17,13 @@
     wait_timeout: "{{ wait_timeout }}"
 
 # Delete AirTrail resources (application)
+- name: Undeploy the AirTrail HPA
+  kubernetes.core.k8s:
+    state: absent
+    definition: "{{ lookup('template', 'templates/airtrail-hpa.yml') }}"
+    wait: yes
+    wait_timeout: "{{ wait_timeout }}"
+
 - name: Undeploy the AirTrail Service
   kubernetes.core.k8s:
     state: absent

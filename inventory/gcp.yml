@@ -22,7 +22,7 @@ all:
     # END Test variables (DO NOT CHANGE)
 
     # App variables
-    app_ip: '34.168.251.157'
+    app_ip: '35.230.98.150'
     app_port: 3000
 
     # Database and sensitive variables are now in group_vars/all/vault.yml

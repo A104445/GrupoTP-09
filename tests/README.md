@@ -1,16 +1,38 @@
-## Load test using K6
+## Load Testing with K6
 
-API ENDPOINTS:
+### API Endpoints
 
-```bash
-GET /flight/list: Lista todos os voos do utilizador.
+#### Health Check
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `GET` | `/` | Check application access (returns 200) | None |
 
-GET /flight/get/{id}: Obtém detalhes de um voo específico.
+#### User Management
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `POST` | `/api/users/setup` | Setup initial admin/owner user | None |
+| `POST` | `/api/users/login` | User login (returns `auth_session` cookie) | None |
+| `POST` | `/api/users/add` | Create a new user | Cookie: `auth_session` |
 
-POST /flight/save: Permite criar um novo voo ou atualizar um existente.
+#### API Key Management
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `POST` | `/api/trpc/user.createApiKey?batch=1` | Generate API key for authenticated user | Cookie: `auth_session` |
 
-POST /flight/delete: Remove um voo da base de dados.
-```
+#### Flight Management
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `GET` | `/api/flight/list` | List all user flights | Bearer Token |
+| `GET` | `/api/flight/get/{id}` | Get specific flight details | Bearer Token |
+| `POST` | `/api/flight/save` | Create or update a flight | Bearer Token |
+| `POST` | `/api/flight/delete` | Delete a flight | Bearer Token |
+
+### Authentication Flow
+
+1. **Setup** - `POST /api/users/setup` with form data (`username`, `password`, `displayName`, `unit`)
+2. **Login** - `POST /api/users/login` to get `auth_session` cookie
+3. **Create API Key** - `POST /api/trpc/user.createApiKey?batch=1` using the session cookie
+4. **Use API** - Access flight endpoints using `Authorization: Bearer <api_key>`
 
 ## Install K6
 
@@ -26,23 +48,20 @@ sudo apt-get install k6
 
 ## Run K6 Tests
 
-### Quick Test (10 VUs, 30 seconds)
-```bash
-k6 run tests/k6/quick-test.js
-```
-
-### Full Stress Test (1 to 1000 VUs)
+### Stress Test (Health Check Endpoint)
 ```bash
 k6 run tests/k6/stress-test.js
 ```
 
-### With custom configuration
+### Test Scenarios (Full API Flow)
 ```bash
-# Override BASE_URL and test user credentials
-k6 run -e BASE_URL=http://YOUR_IP:3000 \
-       -e TEST_USERNAME=myuser \
-       -e TEST_PASSWORD=mypass123 \
-       tests/k6/stress-test.js
+k6 run tests/k6/test_scenarios.js
+```
+
+### With Custom Configuration
+```bash
+# Override BASE_URL
+k6 run -e BASE_URL=http://YOUR_IP:3000 tests/k6/stress-test.js
 
 # Output results to JSON file
 k6 run --out json=results.json tests/k6/stress-test.js
@@ -51,114 +70,50 @@ k6 run --out json=results.json tests/k6/stress-test.js
 k6 run --out influxdb=http://localhost:8086/k6 tests/k6/stress-test.js
 ```
 
-### Environment Variables
-The tests use these environment variables (with defaults):
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `BASE_URL` | `http://34.83.85.235:3000` | App URL |
-| `TEST_PASSWORD` | `ascn2526` | Test user password (fixed) |
-| `TEST_DISPLAY_NAME` | `K6 Test User` | Display name |
-| `TEST_UNIT` | `metric` | Unit preference |
-
-**Note:** Username is generated randomly as `k6user_<timestamp>_<random>` for each test run.
-
-A `.env` file is available at `tests/k6/.env` for reference.
-
 ### Using Docker
 ```bash
 docker run --rm -i grafana/k6 run - <tests/k6/stress-test.js
 ```
 
+---
+
 ## Test Stages (stress-test.js)
 
-The stress test ramps through these client counts:
-- 1 VU for 30s
-- 10 VUs for 30s
-- 50 VUs for 30s
-- 100 VUs for 30s
-- 200 VUs for 30s
-- 400 VUs for 30s
-- 800 VUs for 30s
-- 1000 VUs for 1 minute
-- Ramp down to 0 over 30s
+The stress test targets `GET /` endpoint with parallel virtual users (VUs) ramping through these stages:
+
+| Stage | VUs | Duration | Description |
+|-------|-----|----------|-------------|
+| 1 | 1 | 30s | Baseline single user |
+| 2 | 10 | 30s | Light load |
+| 3 | 50 | 30s | Moderate load |
+| 4 | 100 | 30s | Standard load |
+| 5 | 200 | 30s | Increased load |
+| 6 | 400 | 30s | High load |
+| 7 | 800 | 30s | Heavy load |
+| 8 | 1000 | 30s | Very heavy load |
+| 9 | 2500 | 30s | Stress load |
+| 10 | 5000 | 30s | Extreme load |
+| 11 | 10000 | 30s | Peak load |
+| 12 | 150000 | 30s | Maximum stress |
+| 13 | 0 | 30s | Ramp down |
+
+**Total Duration:** ~6.5 minutes
+
+### Thresholds
+- 95% of requests must complete under 2 seconds
+- Less than 10% failure rate
 
 ---
 
-## Setup Prerequisites
+## Test Scenarios (test_scenarios.js)
 
-Going to test for 1,10,50,100,200,400,800,1000 clients and random API endpoints. But first needs to use the other endpoints like.
+The full API flow test executes:
 
-- name: Task 0 - Check access to App (HTTP GET should return 200)
-  ansible.builtin.uri:
-    url: "http://{{ app_ip }}:{{ app_port }}/"
+1. **Setup User** - Creates admin/owner account
+2. **Login** - Authenticates and captures `auth_session` cookie
+3. **Create Test User** - Creates additional user via `/api/users/add`
+4. **Create API Key** - Generates Bearer token for API access
+5. **Add Flight** - Creates a new flight record
+6. **Get Flight** - Retrieves the created flight details
 
-- name: Task 1 - Setup user
-  ansible.builtin.uri:
-    url: "http://{{ app_ip }}:{{ app_port }}/api/users/setup"
-    method: POST
-    headers:
-      Origin: "http://{{ app_ip }}:{{ app_port }}"
-    body_format: form-multipart
-    body:
-      username: "{{ app_admin }}"
-      password: "{{ app_admin_password }}"
-      displayName: "{{ app_admin_display_name }}"
-      unit: "{{ app_admin_unit }}"
-    status_code: 303
-    return_content: true
-  register: setup_user_response
-
-- name: Task 2 - Login
-  ansible.builtin.uri:
-    url: "http://{{ app_ip }}:{{ app_port }}/api/users/login"
-    method: POST
-    headers:
-      Accept: "application/json"
-      Content-Type: "application/x-www-form-urlencoded"
-      Origin: "http://{{ app_ip }}:{{ app_port }}"
-    body: "username={{ app_admin }}&password={{ app_admin_password }}"
-    body_format: raw
-    return_content: true
-    status_code: [200, 303]
-    follow_redirects: all
-  register: login_response
-
-- name: Extract auth_session value from login response
-  ansible.builtin.set_fact:
-    auth_session: "{{ (login_response.set_cookie | regex_findall('auth_session=([^;]+)'))[0] }}"
-
-- name: Show extracted auth_session
-  ansible.builtin.debug:
-    var: auth_session
-
-- name: Task 3 - Create API key
-  ansible.builtin.uri:
-    url: "http://{{ app_ip }}:{{ app_port }}/api/trpc/user.createApiKey?batch=1"
-    method: POST
-    headers:
-      Content-Type: "application/json"
-      Origin: "http://{{ app_ip }}:{{ app_port }}"
-      Cookie: "auth_session={{ auth_session }}"
-    body: '{"0":"[\"myapikey\"]"}'
-    body_format: raw
-    return_content: true
-    status_code: 200
-  register: create_apikey_response
-
-- name: Extract API key from response
-  ansible.builtin.set_fact:
-    api_key: "{{ create_apikey_response.json[0].result.data | regex_replace('\"', '') }}"
-
-- name: Debug API key
-  ansible.builtin.debug:
-    var: api_key
-
-- name: Update API key in inventory
-  ansible.builtin.lineinfile:
-    path: inventory/gcp.yml
-    regexp: '^(\s*)app_admin_api_key:.*$'
-    line: '\1app_admin_api_key: "{{ api_key }}"'
-    backrefs: true
-
-Then it can use the endpoints..I gave in the beggining.
-Be aware of Bearer tokens and cookies and to use the API KEY that was created.
+---
