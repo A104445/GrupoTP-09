@@ -59,8 +59,11 @@ ansible-playbook airtrail-deploy.yml
 ansible-playbook monitoring-deploy.yml
 
 ### Vai depois de configurado aparecer dois urls. 1-Grafana; 2-Prometheus
+USER:admin
 
-Entrar no primeiro link ir em DataSources e adicionar o Prometheus. Nome com P em maisculas (Prometheus).
+PASSWORD:admin
+
+Entrar no primeiro link ( Grafana) ir em Connections > DataSources e adicionar o Prometheus. Nome com P em maisculas (Prometheus).
 
 Colocar o url do Prometheus.
 
