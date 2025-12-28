@@ -4,6 +4,7 @@ metadata:
   name: airtrail-db-pvc-claim
   namespace: default
 spec:
+  storageClassName: postgres-retain
   accessModes:
     - ReadWriteOnce
   resources:

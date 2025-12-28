@@ -1,6 +1,11 @@
 ---
 # Deploy AirTrail application on Kubernetes
 
+- name: Deploy the Postgres StorageClass
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'templates/postgres-storageclass.yml') }}"
+
 - name: Deploy the Postgres Secret
   kubernetes.core.k8s:
     state: present
