@@ -17,12 +17,12 @@ all:
     app_admin_password: admin1234
     app_admin_display_name: Admin
     app_admin_unit: metric
-    app_admin_api_key: "xzm5nujni2vqtj7ea2c3hauonpekbnak"
+    app_admin_api_key: "wy554ho2yjx2ovcs6zeany7qnugtcuvh"
     app_admin_flight_id: "1"
     # END Test variables (DO NOT CHANGE)
 
     # App variables
-    app_ip: '35.230.98.150'
+    app_ip: '136.118.127.109'
     app_port: 3000
 
     # Database and sensitive variables are now in group_vars/all/vault.yml

@@ -1,7 +1,9 @@
 ### Foi mudado tipo máquina para:
 
 e2-standard-2 e zona: us-west1-b
+## Env
 
+Ter .vault_pass com apenas ascn2526
 ## Dependências
 
 ansible [core 2.16.3]
